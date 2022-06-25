@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from . import api
 
 tags_metadata = [
     {
@@ -23,7 +24,4 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-
-@app.get('/')
-def root():
-    return {'message': '1111'}
+app.include_router(api.router)
