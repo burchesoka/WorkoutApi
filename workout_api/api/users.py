@@ -22,11 +22,11 @@ router = APIRouter(
     response_model=List[models.User],
 )
 def get_users(
-    user_type: Optional[models.UserType] = None,
+    user_status: Optional[models.UserStatus] = None,
     users_service: UsersService = Depends(),
 ):
 
-    return users_service.get_users(user_type=user_type)
+    return users_service.get_users(user_status=user_status)
 
 
 @router.post(

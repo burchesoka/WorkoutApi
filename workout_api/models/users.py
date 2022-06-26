@@ -6,17 +6,16 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UserType(str, Enum):
+class UserStatus(str, Enum):
     user = "user"
-    trainer = "trainer"
     user_without_trainer = "user_without_trainer"
-    new_user = "new_user"
+    new_user = "new"
 
 
 class BaseUser(BaseModel):
-    user_name: str
-    phone: str
-    user_type: UserType
+    name: str
+    phone: int  # как задать количество символов в номере?
+    status: UserStatus
 
 
 class UserCreate(BaseUser):
