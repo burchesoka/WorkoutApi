@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
-from fastapi import Depends
+from sqlalchemy.exc import IntegrityError
+from fastapi import Depends, status, HTTPException
 
 from .. import tables
 from ..database import get_session
@@ -22,5 +23,8 @@ class UsersService:
     def create_user(self, user_data: models.UserCreate) -> tables.User:
         user = tables.User(**user_data.dict())
         self.session.add(user)
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
         return user

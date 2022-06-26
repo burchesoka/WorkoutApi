@@ -26,7 +26,7 @@ class BaseUser(Base):
     __abstract__ = True
 
     id = Column(Integer, primary_key=True)
-    telegram_id = Column(Integer, unique=True, index=True)
+    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
     name = Column(String)
     phone = Column(Integer, unique=True)
 

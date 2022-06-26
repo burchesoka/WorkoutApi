@@ -16,6 +16,7 @@ class BaseUser(BaseModel):
     name: str
     phone: int  # как задать количество символов в номере?
     status: UserStatus
+    telegram_id: Optional[int]
 
 
 class UserCreate(BaseUser):
