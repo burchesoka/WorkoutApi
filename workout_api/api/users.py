@@ -25,7 +25,7 @@ def get_users(
     user_status: Optional[models.UserStatus] = None,
     users_service: UsersService = Depends(),
 ):
-    return users_service.get_users(user_status=user_status)
+    return users_service.get_many(user_status=user_status)
 
 
 @router.get('/{user_id}', response_model=models.User,)

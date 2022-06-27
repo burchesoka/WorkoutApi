@@ -26,7 +26,6 @@ class BaseUser(Base):
     __abstract__ = True
 
     id = Column(Integer, primary_key=True)
-    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
     name = Column(String)
     phone = Column(Integer, unique=True)
 
@@ -35,10 +34,25 @@ class User(BaseUser):
     __tablename__ = 'users'
 
     status = Column(String)
+    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
+    stats_id = Column(Integer, ForeignKey('user_stats.id'))
+
+    stats = relationship('UserStats', backref='stats')
 
 
 class Trainer(BaseUser):
     __tablename__ = 'trainers'
+
+    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
+
+
+class NotRegisteredUser(BaseUser):
+    __tablename__ = 'not_registered_users'
+
+    # TODO когда сделаю группы и тренеров
+    group_id = Column(Integer, ForeignKey('groups.id'), nullable=True)
+
+    group = relationship('Group', backref='group')
 
 
 class Group(Base):
@@ -50,3 +64,13 @@ class Group(Base):
 
     users = relationship("User", secondary=users_groups_table)
     trainer = relationship("Trainer", backref='groups')
+
+
+class UserStats(Base):
+    __tablename__ = 'user_stats'
+
+    id = Column(Integer, primary_key=True)
+    date_created = Column(DateTime)
+    date_updated = Column(DateTime)
+    visited_events = Column(Integer)
+    skipped_events = Column(Integer)

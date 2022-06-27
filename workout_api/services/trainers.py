@@ -9,55 +9,42 @@ from ..database import get_session
 from .. import models
 
 
-class UsersService:
+class TrainersService:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    def get_many(self, user_status: Optional[models.UserStatus] = None) -> List[tables.User]:
-        query = self.session.query(tables.User)
-        if user_status:
-            query = query.filter_by(status=user_status)
-        users = query.all()
-        return users
+    def get_many(self) -> List[tables.Trainer]:
+        query = self.session.query(tables.Trainer)
+        trainers = query.all()
+        return trainers
 
-    def _get(self, user_id):
-        user = (
+    def _get(self, trainer_id):
+        trainer = (
             self.session
-            .query(tables.User)
-            .filter_by(id=user_id)
+            .query(tables.Trainer)
+            .filter_by(id=trainer_id)
             .first()
         )
-        if not user:
+        if not trainer:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return user
+        return trainer
 
-    def get(self, user_id: int) -> tables.User:
-        return self._get(user_id)
+    def get(self, trainer_id: int) -> tables.Trainer:
+        return self._get(trainer_id)
 
-    def get_user_by_telegram_id(self, telegram_id: int) -> tables.User:
-        user = (
+    def get_user_by_telegram_id(self, telegram_id: int) -> tables.Trainer:
+        trainer = (
             self.session
-            .query(tables.User)
+            .query(tables.Trainer)
             .filter_by(telegram_id=telegram_id)
             .first()
         )
-        if not user:
+        if not trainer:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return user
+        return trainer
 
-    def get_user_by_phone(self, phone: int) -> tables.User:
-        user = (
-            self.session
-            .query(tables.User)
-            .filter_by(phone=phone)
-            .first()
-        )
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return user
-
-    def create(self, user_data: models.UserCreate) -> tables.User:
-        user = tables.User(**user_data.dict())
+    def create(self, trainer_data: models.TrainerCreate) -> tables.Trainer:
+        user = tables.User(**trainer_data.dict())
         self.session.add(user)
         try:
             self.session.commit()
