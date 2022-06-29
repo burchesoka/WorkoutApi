@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -26,7 +28,7 @@ class BaseUser(Base):
     __abstract__ = True
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(100))
     phone = Column(Integer, unique=True)
 
 
@@ -35,9 +37,10 @@ class User(BaseUser):
 
     status = Column(String)
     telegram_id = Column(Integer, unique=True, index=True, nullable=True)
-    stats_id = Column(Integer, ForeignKey('user_stats.id'))
 
-    stats = relationship('UserStats', backref='stats')
+    profile = relationship('Profile', backref='users', uselist=False)
+    stats = relationship('UserStats', backref='users', uselist=False)
+    # groups = relationship('Group', secondary=users_groups_table) -- конфликтуе
 
 
 class Trainer(BaseUser):
@@ -52,7 +55,7 @@ class NotRegisteredUser(BaseUser):
     # TODO когда сделаю группы и тренеров
     group_id = Column(Integer, ForeignKey('groups.id'), nullable=True)
 
-    group = relationship('Group', backref='group')
+    group = relationship('Group', backref='not_registered_users')
 
 
 class Group(Base):
@@ -70,7 +73,18 @@ class UserStats(Base):
     __tablename__ = 'user_stats'
 
     id = Column(Integer, primary_key=True)
-    date_created = Column(DateTime)
-    date_updated = Column(DateTime)
-    visited_events = Column(Integer)
-    skipped_events = Column(Integer)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    visited_events = Column(Integer, nullable=True)
+    skipped_events = Column(Integer, nullable=True)
+
+
+class Profile(Base):
+    __tablename__ = 'profiles'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    city = Column(String(25), nullable=True)
+    gender = Column(String(10), nullable=True)
+    age = Column(Integer, nullable=True)
+    date_created = Column(DateTime, default=datetime.utcnow())
+    date_updated = Column(DateTime, default=datetime.utcnow())

@@ -31,6 +31,12 @@ class UsersService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return user
 
+    def _commit(self, session):
+        try:
+            session.commit()
+        except IntegrityError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
+
     def get(self, user_id: int) -> tables.User:
         return self._get(user_id)
 
@@ -59,20 +65,28 @@ class UsersService:
     def create(self, user_data: models.UserCreate) -> tables.User:
         user = tables.User(**user_data.dict())
         self.session.add(user)
-        try:
-            self.session.commit()
-        except IntegrityError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
+        self._commit(self.session)
+
+        user_profile = models.ProfileCreate(user_id=user.id)
+        self.session.add(tables.Profile(**user_profile.dict()))
+        self._commit(self.session)
+
+        user_stats = models.UserStatsCreate(user_id=user.id)
+        self.session.add(tables.UserStats(**user_stats.dict()))
+        self._commit(self.session)
+
         return user
 
     def update(self, user_id: int, user_data: models.UserUpdate) -> tables.User:
         user = self._get(user_id)
         for field, value in user_data:
             setattr(user, field, value)
-        self.session.commit()
+        self._commit(self.session)
         return user
 
     def delete(self, user_id):
         user = self._get(user_id)
+        self.session.delete(user.stats)
+        self.session.delete(user.profile)
         self.session.delete(user)
         self.session.commit()

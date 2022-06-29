@@ -3,6 +3,13 @@ from .users import (
     UserCreate,
     UserUpdate,
     UserStatus,
+    UserGender,
+    UserStats,
+    UserStatsCreate,
+    UserStatsUpdate,
+    Profile,
+    ProfileUpdate,
+    ProfileCreate,
 )
 from .trainers import (
     Trainer,
