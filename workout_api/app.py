@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from . import api
+from .database import database
 
 tags_metadata = [
     {
@@ -32,5 +33,17 @@ app = FastAPI(
     version='1.0.0',
     openapi_tags=tags_metadata,
 )
+
+
+@app.on_event('startup')
+async def startup():
+    await database.connect()
+    print("!!!  DB CONNECTED   !!!!")
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    await database.disconnect()
+    print('!!!   DB DISCONNECTED   !!!')
 
 app.include_router(api.router)

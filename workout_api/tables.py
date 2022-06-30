@@ -3,88 +3,81 @@ from datetime import datetime
 from sqlalchemy import (
     Column,
     DateTime,
+    Date,
     ForeignKey,
     Integer,
+    BigInteger,
     Numeric,
     String,
     Table,
+    MetaData,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 
-Base = declarative_base()
+metadata = MetaData()
 
+''' Users added by trainer, but not registered himself: '''
+not_registered_user = Table(
+    'not_registered_users',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('name', String(100)),
+    Column('phone', Integer, unique=True),
+    Column('group_id', Integer, ForeignKey('groups.id'), nullable=True)
+)
+
+user = Table(
+    'users',
+    metadata,
+    Column('id', BigInteger, primary_key=True),
+    Column('name', String(100)),
+    Column('phone', BigInteger, unique=True),
+    Column('status', String),
+    Column('telegram_id', BigInteger, unique=True, index=True, nullable=True),
+    # relationship???
+)
+
+user_stats = Table(
+    'user_stats',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('visited_events', Integer, nullable=True),
+    Column('skipped_events', Integer, nullable=True),
+)
+
+profile = Table(
+    'profiles',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('city', String(25), nullable=True),
+    Column('gender', String(10), nullable=True),
+    Column('birthday', Date, nullable=True),
+    Column('date_created', DateTime, default=datetime.utcnow()),  # server_default=func.now() instead default=...?
+    Column('date_updated', DateTime, default=datetime.utcnow()),
+)
+
+group = Table(
+    'groups',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('group_name', String),
+    Column('trainer_id', Integer, ForeignKey('trainers.id'), index=True),
+)
 
 users_groups_table = Table(
     "users_groups",
-    Base.metadata,
+    metadata,
     Column("user_id", ForeignKey("users.id"), primary_key=True),
     Column("group_id", ForeignKey("groups.id"), primary_key=True),
 )
 
-
-class BaseUser(Base):
-    __abstract__ = True
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100))
-    phone = Column(Integer, unique=True)
-
-
-class User(BaseUser):
-    __tablename__ = 'users'
-
-    status = Column(String)
-    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
-
-    profile = relationship('Profile', backref='users', uselist=False)
-    stats = relationship('UserStats', backref='users', uselist=False)
-    # groups = relationship('Group', secondary=users_groups_table) -- конфликтуе
-
-
-class Trainer(BaseUser):
-    __tablename__ = 'trainers'
-
-    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
-
-
-class NotRegisteredUser(BaseUser):
-    __tablename__ = 'not_registered_users'
-
-    # TODO когда сделаю группы и тренеров
-    group_id = Column(Integer, ForeignKey('groups.id'), nullable=True)
-
-    group = relationship('Group', backref='not_registered_users')
-
-
-class Group(Base):
-    __tablename__ = 'groups'
-
-    id = Column(Integer, primary_key=True)
-    group_name = Column(String)
-    trainer_id = Column(Integer, ForeignKey('trainers.id'), index=True)
-
-    users = relationship("User", secondary=users_groups_table)
-    trainer = relationship("Trainer", backref='groups')
-
-
-class UserStats(Base):
-    __tablename__ = 'user_stats'
-
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    visited_events = Column(Integer, nullable=True)
-    skipped_events = Column(Integer, nullable=True)
-
-
-class Profile(Base):
-    __tablename__ = 'profiles'
-
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    city = Column(String(25), nullable=True)
-    gender = Column(String(10), nullable=True)
-    age = Column(Integer, nullable=True)
-    date_created = Column(DateTime, default=datetime.utcnow())
-    date_updated = Column(DateTime, default=datetime.utcnow())
+trainer = Table(
+    'trainers',
+    metadata,
+    Column('id', Integer, primary_key=True),
+    Column('name', String(100)),
+    Column('phone', Integer, unique=True),
+    Column('telegram_id', Integer, unique=True, index=True, nullable=True)
+)
