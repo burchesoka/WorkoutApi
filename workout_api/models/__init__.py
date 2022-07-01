@@ -16,8 +16,3 @@ from .trainers import (
     TrainerUpdate,
     TrainerCreate,
 )
-from .not_registered_users import (
-    NotRegisteredUser,
-    NotRegisteredUserCreate,
-    NotRegisteredUserUpdate,
-)

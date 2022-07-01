@@ -25,7 +25,7 @@ class UsersService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return user
 
-    async def get_many(self, user_status: Optional[models.UserStatus] = None) -> List[tables.user]:
+    async def get_many(self, user_status: Optional[models.UserStatus] = None) -> List[models.User]:
         if user_status:
             query = tables.user.select().where(tables.user.c.status == user_status)
             return await database.fetch_all(query)
@@ -45,20 +45,6 @@ class UsersService:
         return await self._get_or_404(query)
 
     async def create(self, user_data: models.UserCreate) -> tables.user:
-        # TODO Добваить статс и профиль
-
-        # user = tables.User(**user_data.dict())
-        # self.session.add(user)
-        # self._commit(self.session)
-        #
-        # user_profile = models.ProfileCreate(user_id=user.id)
-        # self.session.add(tables.Profile(**user_profile.dict()))
-        # self._commit(self.session)
-        #
-        # user_stats = models.UserStatsCreate(user_id=user.id)
-        # self.session.add(tables.UserStats(**user_stats.dict()))
-        # self._commit(self.session)
-
         query = tables.user.insert().values(**user_data.dict()).returning(
             tables.user.c.id,
             tables.user.c.name,
@@ -66,23 +52,31 @@ class UsersService:
             tables.user.c.status,
             tables.user.c.telegram_id,
         )
-        return await self._get_or_404(query)
+        user = await self._get_or_404(query)
+        user_profile_query = tables.profile.insert().values(user_id=user.id)
+        await self._get_or_404(user_profile_query)
+        user_stats_query = tables.user_stats.insert().values(user_id=user.id)
+        await self._get_or_404(user_stats_query)
+        return user
 
     async def update(self, user_id: int, user_data: models.UserUpdate) -> tables.user:
         query = (
             tables.user.update()
             .where(tables.user.c.id == user_id)
             .values(**user_data.dict()).returning(
-            tables.user.c.id,
-            tables.user.c.name,
-            tables.user.c.phone,
-            tables.user.c.status,
-            tables.user.c.telegram_id,
-        )
+                tables.user.c.id,
+                tables.user.c.name,
+                tables.user.c.phone,
+                tables.user.c.status,
+                tables.user.c.telegram_id,
+            )
         )
         return await self._get_or_404(query)
 
     async def delete(self, user_id):
-        # TODO Удалить сначала статс и профиль
+        query = tables.profile.delete().where(tables.profile.c.user_id == user_id)
+        await database.execute(query)
+        query = tables.user_stats.delete().where(tables.user_stats.c.user_id == user_id)
+        await database.execute(query)
         query = tables.user.delete().where(tables.user.c.id == user_id)
         await database.execute(query)

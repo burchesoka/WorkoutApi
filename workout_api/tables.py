@@ -16,16 +16,6 @@ from sqlalchemy import (
 
 metadata = MetaData()
 
-''' Users added by trainer, but not registered himself: '''
-not_registered_user = Table(
-    'not_registered_users',
-    metadata,
-    Column('id', Integer, primary_key=True),
-    Column('name', String(100)),
-    Column('phone', Integer, unique=True),
-    Column('group_id', Integer, ForeignKey('groups.id'), nullable=True)
-)
-
 user = Table(
     'users',
     metadata,

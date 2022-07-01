@@ -40,6 +40,12 @@ async def get_user_by_telegram_id(telegram_id: int):
     return await service.get_user_by_telegram_id(telegram_id)
 
 
+@router.get('/phone/{phone}', response_model=models.User)
+async def get_user_by_telegram_id(phone: int):
+    service = UsersService()
+    return await service.get_user_by_phone(phone)
+
+
 @router.post(
     '/',
     response_model=models.User,
@@ -59,7 +65,7 @@ async def update_user(
     return await service.update(user_id, user_data)
 
 
-@router.delete('/{user_id}')
+@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: int):
     service = UsersService()
     await service.delete(user_id)

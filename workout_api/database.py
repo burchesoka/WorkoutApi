@@ -12,7 +12,6 @@ database = Database(
 
 
 async def get_session():
-
     try:
         print('YIELD')
         yield await database.connect()
@@ -20,17 +19,3 @@ async def get_session():
     finally:
         await database.disconnect()
         print('CLOSED SESSION')
-
-
-
-''' OLD '''
-engine = create_engine(
-    settings.database_url,
-    connect_args={'check_same_thread': False},
-)
-
-Session = sessionmaker(
-    engine,
-    autocommit=False,
-    autoflush=False,
-)

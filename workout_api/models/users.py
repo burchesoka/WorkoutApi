@@ -8,8 +8,9 @@ from pydantic import BaseModel
 
 class UserStatus(str, Enum):
     user = "user"
+    just_added_by_trainer = 'just_added_by_trainer'
+    new_user = "new-self_added"
     user_without_trainer = "user_without_trainer"
-    new_user = "new"
 
 
 class UserGender(str, Enum):
