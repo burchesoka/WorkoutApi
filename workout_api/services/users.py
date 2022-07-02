@@ -45,13 +45,10 @@ class UsersService:
         return await self._get_or_404(query)
 
     async def create(self, user_data: models.UserCreate) -> tables.user:
-        query = tables.user.insert().values(**user_data.dict()).returning(
-            tables.user.c.id,
-            tables.user.c.name,
-            tables.user.c.phone,
-            tables.user.c.status,
-            tables.user.c.telegram_id,
-        )
+        query = tables.user.insert().values(
+            **user_data.dict()
+        ).returning(tables.user)
+
         user = await self._get_or_404(query)
         user_profile_query = tables.profile.insert().values(user_id=user.id)
         await self._get_or_404(user_profile_query)
@@ -63,13 +60,8 @@ class UsersService:
         query = (
             tables.user.update()
             .where(tables.user.c.id == user_id)
-            .values(**user_data.dict()).returning(
-                tables.user.c.id,
-                tables.user.c.name,
-                tables.user.c.phone,
-                tables.user.c.status,
-                tables.user.c.telegram_id,
-            )
+            .values(**user_data.dict())
+            .returning(tables.user)
         )
         return await self._get_or_404(query)
 
