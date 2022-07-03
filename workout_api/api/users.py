@@ -41,7 +41,7 @@ async def get_user_by_telegram_id(telegram_id: int):
 
 
 @router.get('/phone/{phone}', response_model=models.User)
-async def get_user_by_telegram_id(phone: int):
+async def get_user_by_phone(phone: int):
     service = UsersService()
     return await service.get_user_by_phone(phone)
 
