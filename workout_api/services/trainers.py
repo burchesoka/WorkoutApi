@@ -1,65 +1,64 @@
-from typing import List, Optional
+import asyncpg
+from typing import List
 
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from fastapi import Depends, status, HTTPException
+
+from fastapi import status, HTTPException
 
 from .. import tables
-from ..database import get_session
+from ..database import database
 from .. import models
 
 
 class TrainersService:
-    def __init__(self, session: Session = Depends(get_session)):
-        self.session = session
-
-    def get_many(self) -> List[tables.Trainer]:
-        query = self.session.query(tables.Trainer)
-        trainers = query.all()
-        return trainers
-
-    def _get(self, trainer_id):
-        trainer = (
-            self.session
-            .query(tables.Trainer)
-            .filter_by(id=trainer_id)
-            .first()
-        )
-        if not trainer:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return trainer
-
-    def get(self, trainer_id: int) -> tables.Trainer:
-        return self._get(trainer_id)
-
-    def get_user_by_telegram_id(self, telegram_id: int) -> tables.Trainer:
-        trainer = (
-            self.session
-            .query(tables.Trainer)
-            .filter_by(telegram_id=telegram_id)
-            .first()
-        )
-        if not trainer:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return trainer
-
-    def create(self, trainer_data: models.TrainerCreate) -> tables.Trainer:
-        user = tables.User(**trainer_data.dict())
-        self.session.add(user)
+    async def _get_or_404(self, query) -> object:
         try:
-            self.session.commit()
-        except IntegrityError as e:
+            trainer = await database.fetch_one(query)
+        except asyncpg.exceptions.UniqueViolationError as e:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
-        return user
+        except asyncpg.exceptions.DataError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
 
-    def update(self, user_id: int, user_data: models.UserUpdate) -> tables.User:
-        user = self._get(user_id)
-        for field, value in user_data:
-            setattr(user, field, value)
-        self.session.commit()
-        return user
+        if not trainer:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        return trainer
 
-    def delete(self, user_id):
-        user = self._get(user_id)
-        self.session.delete(user)
-        self.session.commit()
+    async def get_many(self) -> List[models.Trainer]:
+        query = tables.trainer.select()
+        return await database.fetch_all(query)
+
+    async def get(self, trainer_id: int) -> tables.trainer:
+        query = tables.trainer.select().where(tables.trainer.c.id == trainer_id)
+        return await self._get_or_404(query)
+
+    async def get_trainer_by_telegram_id(self, telegram_id: int) -> tables.trainer:
+        query = tables.trainer.select().where(tables.trainer.c.telegram_id == telegram_id)
+        return await self._get_or_404(query)
+
+    async def create(self, trainer_data: models.TrainerCreate) -> tables.trainer:
+        query = tables.trainer.insert().values(
+            **trainer_data.dict()
+        ).returning(tables.trainer)
+
+        trainer = await self._get_or_404(query)
+        # trainer_profile_query = tables.trainer_profile.insert().values(trainer_id=trainer.id)
+        # await self._get_or_404(trainer_profile_query)
+        # trainer_stats_query = tables.trainer_stats.insert().values(trainer_id=trainer.id)
+        # await self._get_or_404(trainer_stats_query)
+        return trainer
+
+    async def update(self, trainer_id: int, trainer_data: models.TrainerUpdate) -> tables.trainer:
+        query = (
+            tables.trainer.update()
+            .where(tables.trainer.c.id == trainer_id)
+            .values(**trainer_data.dict())
+            .returning(tables.trainer)
+        )
+        return await self._get_or_404(query)
+
+    async def delete(self, trainer_id):
+        # query = tables.profile.delete().where(tables.profile.c.user_id == user_id)
+        # await database.execute(query)
+        # query = tables.user_stats.delete().where(tables.user_stats.c.user_id == user_id)
+        # await database.execute(query)
+        query = tables.trainer.delete().where(tables.trainer.c.id == trainer_id)
+        await database.execute(query)

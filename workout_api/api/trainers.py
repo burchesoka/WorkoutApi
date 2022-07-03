@@ -1,8 +1,7 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import (
     APIRouter,
-    Depends,
     Response,
     status,
 )
@@ -21,55 +20,44 @@ router = APIRouter(
     '/',
     response_model=List[models.Trainer],
 )
-def get_trainers(
-    trainers_service: TrainersService = Depends(),
-):
-    return trainers_service.get_many()
+async def get_trainers():
+    service = TrainersService()
+    return await service.get_many()
 
 
-@router.get('/{user_id}', response_model=models.Trainer,)
-def get_user(
-    user_id: int,
-    trainers_service: TrainersService = Depends(),
-):
-    return trainers_service.get(user_id)
+@router.get('/{trainer_id}', response_model=models.Trainer,)
+async def get_trainer(trainer_id: int,):
+    service = TrainersService()
+    return await service.get(trainer_id)
 
 
 @router.get('/telegram/{telegram_id}', response_model=models.Trainer)
-def get_user_by_telegram_id(
-        telegram_id: int,
-        trainers_service: TrainersService = Depends()
-):
-    return trainers_service.get_user_by_telegram_id(telegram_id)
+async def get_trainer_by_telegram_id(telegram_id: int):
+    service = TrainersService()
+    return await service.get_trainer_by_telegram_id(telegram_id)
 
 
 @router.post(
     '/',
-    response_model=models.User,
+    response_model=models.Trainer,
     status_code=status.HTTP_201_CREATED,
 )
-def create_user(
-    trainer_data: models.TrainerCreate,
-    trainers_service: TrainersService = Depends(),
+async def create_trainer(trainer_data: models.TrainerCreate,):
+    service = TrainersService()
+    return await service.create(trainer_data)
 
+
+@router.put('/{trainer_id}', response_model=models.Trainer)
+async def update_trainer(
+        trainer_id: int,
+        trainer_data: models.TrainerUpdate
 ):
-    return trainers_service.create(trainer_data)
+    service = TrainersService()
+    return await service.update(trainer_id, trainer_data)
 
 
-@router.put('/{user_id}', response_model=models.Trainer)
-def update_user(
-        user_id: int,
-        user_data: models.UserUpdate,
-        trainers_service: TrainersService = Depends()
-):
-    return trainers_service.update(user_id, user_data)
-
-
-@router.delete('/{user_id}')
-def delete_user(
-    user_id: int,
-    trainers_service: TrainersService = Depends(),
-
-):
-    trainers_service.delete(user_id)
+@router.delete('/{trainer_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_trainer(trainer_id: int):
+    service = TrainersService()
+    await service.delete(trainer_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
