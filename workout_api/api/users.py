@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 
 from fastapi import (
@@ -10,6 +11,8 @@ from fastapi import (
 from .. import models
 from ..services.users import UsersService
 
+
+logger = logging.getLogger('app.api/users')
 
 router = APIRouter(
     prefix='/users',
@@ -25,24 +28,28 @@ async def get_users(
     user_status: Optional[models.UserStatus] = None,
 ):
     service = UsersService()
+    logger.debug('get_users')
     return await service.get_many(user_status=user_status)
 
 
 @router.get('/{user_id}', response_model=models.User,)
 async def get_user(user_id: int,):
     service = UsersService()
+    logger.info('get_user by id: ' + str(user_id))
     return await service.get(user_id)
 
 
 @router.get('/telegram/{telegram_id}', response_model=models.User)
 async def get_user_by_telegram_id(telegram_id: int):
     service = UsersService()
+    logger.info('get_user_by_telegram_id: ' + str(telegram_id))
     return await service.get_user_by_telegram_id(telegram_id)
 
 
 @router.get('/phone/{phone}', response_model=models.User)
 async def get_user_by_phone(phone: int):
     service = UsersService()
+    logger.info('get_user_by_phone' + str(phone))
     return await service.get_user_by_phone(phone)
 
 
@@ -53,6 +60,7 @@ async def get_user_by_phone(phone: int):
 )
 async def create_user(user_data: models.UserCreate,):
     service = UsersService()
+    logger.info('create_user' + str(user_data))
     return await service.create(user_data)
 
 
@@ -62,6 +70,7 @@ async def update_user(
         user_data: models.UserUpdate
 ):
     service = UsersService()
+    logger.info('update_user id:' + str(user_id) + 'data: ' + str(user_data))
     return await service.update(user_id, user_data)
 
 
@@ -69,4 +78,5 @@ async def update_user(
 async def delete_user(user_id: int):
     service = UsersService()
     await service.delete(user_id)
+    logger.info('delete_user id: ' + str(user_id))
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,6 @@
 from pydantic import BaseSettings
+import logging
+import logging.handlers
 
 
 class Settings(BaseSettings):
@@ -19,3 +21,22 @@ settings = Settings(
     _env_file='.env',
     _env_file_encoding='utf-8',
 )
+
+
+def logger_init(name):
+    logger = logging.getLogger(name)
+    format_ = '%(asctime)s - %(name)s:%(lineno)s - %(levelname)s - %(message)s'
+    logger.setLevel(logging.DEBUG)
+    sh = logging.StreamHandler()
+    sh.setFormatter(logging.Formatter(format_))
+    sh.setLevel(logging.DEBUG)
+    fh = logging.handlers.RotatingFileHandler(
+        filename='logs/workout_api.log',
+        maxBytes=1024000,
+        backupCount=10,
+    )
+    fh.setFormatter(logging.Formatter(format_))
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(sh)
+    logger.addHandler(fh)
+    logger.debug('Logger was initialized')

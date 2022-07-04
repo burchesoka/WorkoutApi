@@ -1,7 +1,14 @@
+import logging
+
 from fastapi import FastAPI
 
 from . import api
 from .database import database
+from .settings import logger_init
+
+
+logger_init('app')
+logger = logging.getLogger('app')
 
 tags_metadata = [
     {
@@ -33,12 +40,13 @@ app = FastAPI(
 @app.on_event('startup')
 async def startup():
     await database.connect()
-    print("!!!  DB CONNECTED   !!!!")
+    logger.info('DB CONNECTED')
+
 
 
 @app.on_event('shutdown')
 async def shutdown():
     await database.disconnect()
-    print('!!!   DB DISCONNECTED   !!!')
+    logger.info('DB DISCONNECTED')
 
 app.include_router(api.router)
