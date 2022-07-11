@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     db_host: str
     db_pass: str
 
-    jwt_secret: str
+    jwt_secret: str = 'asd'
     jwt_algorithm: str = 'HS256'
     jwt_expires_s: int = 3600
 
