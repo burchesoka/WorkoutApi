@@ -43,7 +43,6 @@ async def startup():
     logger.info('DB CONNECTED')
 
 
-
 @app.on_event('shutdown')
 async def shutdown():
     await database.disconnect()

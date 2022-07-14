@@ -11,7 +11,7 @@ from ..database import get_session, database
 from .. import models
 
 
-logger = logging.getLogger('app.services/users')
+logger = logging.getLogger(__name__)
 
 
 class UsersService:
@@ -30,7 +30,7 @@ class UsersService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
 
         if not user:
-            logger.info('user not found')
+            logger.warning('user not found')
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return user
 
@@ -61,7 +61,7 @@ class UsersService:
         ).returning(tables.user)
 
         user = await self._get_or_404(query)
-        user_profile_query = tables.profile.insert().values(user_id=user.id)
+        user_profile_query = tables.user_profile.insert().values(user_id=user.id)
         await self._get_or_404(user_profile_query)
         user_stats_query = tables.user_stats.insert().values(user_id=user.id)
         await self._get_or_404(user_stats_query)
@@ -77,7 +77,7 @@ class UsersService:
         return await self._get_or_404(query)
 
     async def delete(self, user_id):
-        query = tables.profile.delete().where(tables.profile.c.user_id == user_id)
+        query = tables.user_profile.delete().where(tables.user_profile.c.user_id == user_id)
         await database.execute(query)
         query = tables.user_stats.delete().where(tables.user_stats.c.user_id == user_id)
         await database.execute(query)

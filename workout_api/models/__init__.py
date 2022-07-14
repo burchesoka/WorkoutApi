@@ -16,3 +16,8 @@ from .trainers import (
     TrainerUpdate,
     TrainerCreate,
 )
+from .groups import (
+    Group,
+    GroupCreate,
+    GroupUpdate,
+)
