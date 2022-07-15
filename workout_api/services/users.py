@@ -18,7 +18,7 @@ class UsersService:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    async def _get_or_404(self, query) -> object:
+    async def _fetch_one_or_404(self, query) -> object:
         try:
             logger.debug('get_or_404')
             user = await database.fetch_one(query)
@@ -44,27 +44,27 @@ class UsersService:
 
     async def get(self, user_id: int) -> tables.user:
         query = tables.user.select().where(tables.user.c.id == user_id)
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def get_user_by_telegram_id(self, telegram_id: int) -> tables.user:
         query = tables.user.select().where(tables.user.c.telegram_id == telegram_id)
         logger.debug('get_user_by_telegram_id')
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def get_user_by_phone(self, phone: int) -> tables.user:
         query = tables.user.select().where(tables.user.c.phone == phone)
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def create(self, user_data: models.UserCreate) -> tables.user:
         query = tables.user.insert().values(
             **user_data.dict()
         ).returning(tables.user)
 
-        user = await self._get_or_404(query)
+        user = await self._fetch_one_or_404(query)
         user_profile_query = tables.user_profile.insert().values(user_id=user.id)
-        await self._get_or_404(user_profile_query)
+        await self._fetch_one_or_404(user_profile_query)
         user_stats_query = tables.user_stats.insert().values(user_id=user.id)
-        await self._get_or_404(user_stats_query)
+        await self._fetch_one_or_404(user_stats_query)
         return user
 
     async def update(self, user_id: int, user_data: models.UserUpdate) -> tables.user:
@@ -74,7 +74,7 @@ class UsersService:
             .values(**user_data.dict())
             .returning(tables.user)
         )
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def delete(self, user_id):
         query = tables.user_profile.delete().where(tables.user_profile.c.user_id == user_id)

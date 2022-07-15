@@ -13,7 +13,7 @@ from .. import models
 logger = logging.getLogger(__name__)
 
 class TrainersService:
-    async def _get_or_404(self, query) -> object:
+    async def _fetch_one_or_404(self, query) -> object:
         try:
             trainer = await database.fetch_one(query)
         except asyncpg.exceptions.UniqueViolationError as e:
@@ -34,22 +34,22 @@ class TrainersService:
 
     async def get(self, trainer_id: int) -> tables.trainer:
         query = tables.trainer.select().where(tables.trainer.c.id == trainer_id)
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def get_trainer_by_telegram_id(self, telegram_id: int) -> tables.trainer:
         query = tables.trainer.select().where(tables.trainer.c.telegram_id == telegram_id)
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def create(self, trainer_data: models.TrainerCreate) -> tables.trainer:
         query = tables.trainer.insert().values(
             **trainer_data.dict()
         ).returning(tables.trainer)
 
-        trainer = await self._get_or_404(query)
+        trainer = await self._fetch_one_or_404(query)
         trainer_profile_query = tables.trainer_profile.insert().values(trainer_id=trainer.id)
-        await self._get_or_404(trainer_profile_query)
+        await self._fetch_one_or_404(trainer_profile_query)
         trainer_stats_query = tables.trainer_stats.insert().values(trainer_id=trainer.id)
-        await self._get_or_404(trainer_stats_query)
+        await self._fetch_one_or_404(trainer_stats_query)
         return trainer
 
     async def update(self, trainer_id: int, trainer_data: models.TrainerUpdate) -> tables.trainer:
@@ -59,7 +59,7 @@ class TrainersService:
             .values(**trainer_data.dict())
             .returning(tables.trainer)
         )
-        return await self._get_or_404(query)
+        return await self._fetch_one_or_404(query)
 
     async def delete(self, trainer_id):
         query = tables.trainer_profile.delete().where(tables.trainer_profile.c.trainer_id == trainer_id)

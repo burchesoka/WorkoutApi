@@ -9,6 +9,7 @@ from sqlalchemy import (
     BigInteger,
     Numeric,
     String,
+    Boolean,
     Table,
     MetaData,
 )
@@ -47,7 +48,7 @@ user_stats = Table(
     Column('visited_events', Integer, nullable=True),
     Column('skipped_events', Integer, nullable=True),
     Column('paid_total', Integer, nullable=True),
-    Column('user_id', ForeignKey('users.id')),
+    Column('user_id', ForeignKey('users.id'), index=True),
 )
 
 user_profile = Table(
@@ -59,7 +60,7 @@ user_profile = Table(
     Column('birthday', Date, nullable=True),
     Column('date_created', DateTime, default=datetime.utcnow()),  # server_default=func.now() instead default=...?
     Column('date_updated', DateTime, default=datetime.utcnow()),
-    Column('user_id', ForeignKey('users.id')),
+    Column('user_id', ForeignKey('users.id'), index=True),
 )
 
 group = Table(
@@ -97,7 +98,7 @@ trainer_profile = Table(
     Column('birthday', Date, nullable=True),
     Column('date_created', DateTime, default=datetime.utcnow()),  # server_default=func.now() instead default=...?
     Column('date_updated', DateTime, default=datetime.utcnow()),
-    Column('trainer_id', ForeignKey('trainers.id')),
+    Column('trainer_id', ForeignKey('trainers.id'), index=True),
 )
 
 trainer_stats = Table(
@@ -107,7 +108,7 @@ trainer_stats = Table(
     Column('visited_events', Integer, nullable=True),
     Column('skipped_events', Integer, nullable=True),
     Column('paid_total', Integer, nullable=True),
-    Column('trainer_id', ForeignKey('trainers.id')),
+    Column('trainer_id', ForeignKey('trainers.id'), index=True),
 )
 
 payment = Table(
@@ -119,4 +120,5 @@ payment = Table(
     Column('datetime', DateTime, default=datetime.utcnow()),
     Column('user_id', ForeignKey('users.id'), index=True),
     Column('group_id', ForeignKey('groups.id'), index=True),
+    Column('verified', Boolean, default=False),
 )

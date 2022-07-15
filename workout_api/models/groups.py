@@ -19,3 +19,19 @@ class Group(BaseGroup):
 
     class Config:
         orm_mode = True
+
+
+class BaseUserGroup(BaseModel):
+    group_id: int
+    user_name_for_trainer: str
+
+
+class AddUserToGroup(BaseUserGroup):
+    user_phone: int
+
+
+class UserGroup(BaseUserGroup):
+    user_id: int
+
+    class Config:
+        orm_mode = True

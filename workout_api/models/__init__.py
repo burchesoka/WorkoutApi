@@ -20,4 +20,11 @@ from .groups import (
     Group,
     GroupCreate,
     GroupUpdate,
+    UserGroup,
+    AddUserToGroup,
+)
+from .payments import (
+    Payment,
+    PaymentCreate,
+    PaymentUpdate,
 )
