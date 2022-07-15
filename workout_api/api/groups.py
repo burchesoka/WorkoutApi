@@ -15,25 +15,24 @@ router = APIRouter(
     tags=['groups'],
 )
 
+service = GroupsService()
+
 
 @router.get(
     '/',
     response_model=List[models.Group],
 )
 async def get_groups():
-    service = GroupsService()
     return await service.get_many()
 
 
 @router.get('/{group_id}', response_model=models.Group,)
 async def get_group(group_id: int,):
-    service = GroupsService()
     return await service.get(group_id)
 
 
 @router.get('/by_trainer/{trainer_telegram_id}', response_model=List[models.Group])
 async def get_groups_by_trainer_telegram_id(trainer_telegram_id: int):
-    service = GroupsService()
     return await service.get_groups_by_trainer_telegram_id(trainer_telegram_id)
 
 
@@ -43,7 +42,6 @@ async def get_groups_by_trainer_telegram_id(trainer_telegram_id: int):
     status_code=status.HTTP_201_CREATED,
 )
 async def create_group(group_data: models.GroupCreate,):
-    service = GroupsService()
     return await service.create(group_data)
 
 
@@ -53,7 +51,6 @@ async def create_group(group_data: models.GroupCreate,):
     status_code=status.HTTP_201_CREATED,
 )
 async def add_user_to_group(data: models.AddUserToGroup,):
-    service = GroupsService()
     return await service.add_user_to_group(data)
 
 
@@ -62,12 +59,10 @@ async def update_group(
         group_id: int,
         group_data: models.GroupUpdate
 ):
-    service = GroupsService()
     return await service.update(group_id, group_data)
 
 
 @router.delete('/{group_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_group(group_id: int):
-    service = GroupsService()
     await service.delete(group_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

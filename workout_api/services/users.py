@@ -1,39 +1,16 @@
 import logging
 
-import asyncpg
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
-from fastapi import Depends, status, HTTPException
-
 from .. import tables
-from ..database import get_session, database
+from ..database import database
 from .. import models
-
+from .base_service import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class UsersService:
-    def __init__(self, session: Session = Depends(get_session)):
-        self.session = session
-
-    async def _fetch_one_or_404(self, query) -> object:
-        try:
-            logger.debug('get_or_404')
-            user = await database.fetch_one(query)
-        except asyncpg.exceptions.UniqueViolationError as e:
-            logger.info(e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
-        except asyncpg.exceptions.DataError as e:
-            logger.info(e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
-
-        if not user:
-            logger.warning('user not found')
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return user
-
+class UsersService(BaseService):
     async def get_many(self, user_status: Optional[models.UserStatus] = None) -> List[models.User]:
         if user_status:
             query = tables.user.select().where(tables.user.c.status == user_status)

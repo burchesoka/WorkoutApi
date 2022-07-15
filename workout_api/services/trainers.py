@@ -1,33 +1,17 @@
 import logging
-import asyncpg
+
 from typing import List
-
-
-from fastapi import status, HTTPException
 
 from .. import tables
 from ..database import database
 from .. import models
+from .base_service import BaseService
 
 
 logger = logging.getLogger(__name__)
 
-class TrainersService:
-    async def _fetch_one_or_404(self, query) -> object:
-        try:
-            trainer = await database.fetch_one(query)
-        except asyncpg.exceptions.UniqueViolationError as e:
-            logger.info(e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
-        except asyncpg.exceptions.DataError as e:
-            logger.info(e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
 
-        if not trainer:
-            logger.warning('trainer not found')
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return trainer
-
+class TrainersService(BaseService):
     async def get_many(self) -> List[models.Trainer]:
         query = tables.trainer.select()
         return await database.fetch_all(query)
