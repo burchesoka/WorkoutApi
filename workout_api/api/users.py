@@ -70,7 +70,7 @@ async def update_user(
         user_data: models.UserUpdate
 ):
     service = UsersService()
-    logger.info('update_user id:' + str(user_id) + 'data: ' + str(user_data))
+    logger.info('update_user id:' + str(user_id) + ' data: ' + str(user_data))
     return await service.update(user_id, user_data)
 
 
