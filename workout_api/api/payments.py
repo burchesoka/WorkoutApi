@@ -27,8 +27,8 @@ async def get_payments():
 
 
 @router.get('/{payment_id}', response_model=models.Payment,)
-async def get_payment(group_id: int,):
-    return await service.get(group_id)
+async def get_payment(payment_id: int,):
+    return await service.get(payment_id)
 
 
 @router.get('/by_user/{user_id}', response_model=List[models.Payment])
@@ -47,10 +47,17 @@ async def create_payment(payment_data: models.PaymentCreate,):
 
 @router.put('/{payment_id}', response_model=models.Payment)
 async def update_payment(
-        group_id: int,
-        group_data: models.PaymentUpdate
+        payment_id: int,
+        payment_data: models.PaymentUpdate
 ):
-    return await service.update(group_id, group_data)
+    return await service.update(payment_id, payment_data)
+
+
+@router.put('/confirm/{payment_id}', response_model=models.Payment)
+async def confirm_payment(
+        payment_id: int,
+):
+    return await service.confirm(payment_id)
 
 
 @router.delete('/{payment_id}', status_code=status.HTTP_204_NO_CONTENT)
