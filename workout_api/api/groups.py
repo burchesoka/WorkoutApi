@@ -46,12 +46,12 @@ async def create_group(group_data: models.GroupCreate,):
 
 
 @router.post(
-    '/add_user_to_group',
+    '/add_user_to_group_by_phone',
     response_model=models.UserGroup,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_user_to_group(data: models.AddUserToGroup,):
-    return await service.add_user_to_group(data)
+async def add_user_to_group_by_phone(data: models.AddUserToGroup,):
+    return await service.add_user_to_group_by_phone(data)
 
 
 @router.put('/{group_id}', response_model=models.Group)

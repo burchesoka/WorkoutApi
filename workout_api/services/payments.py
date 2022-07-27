@@ -27,11 +27,38 @@ class PaymentsService(BaseService):
         query = tables.payment.select().where(tables.payment.c.user_id == user_id)
         return await self.get_many(query=query)
 
-    async def create(self, group_data: models.PaymentCreate) -> tables.payment:
+    async def create(self, payment_data: models.PaymentCreate) -> tables.payment:
         query = tables.payment.insert().values(
-            **group_data.dict()
+            **payment_data.dict()
         ).returning(tables.payment)
-        return await self._fetch_one_or_404(query)
+        payment = await self._fetch_one_or_404(query)
+
+        users_service = UsersService()
+        user = await users_service.get_user_by_telegram_id(payment.user_telegram_id)
+
+        query = tables.users_groups.select().where(
+            tables.users_groups.c.group_id == payment.group_id and
+            tables.users_groups.c.user_id == user.id
+        )
+        user_group = await self._fetch_one_or_404(query)
+
+        query = tables.group.select().where(
+            tables.group.c.id == payment.group_id
+        )
+        group = await self._fetch_one_or_404(query)
+
+        name = user_group.user_name_for_trainer
+
+        await send_message_to_bot(
+            subject="trainers_bot",
+            recipient_telegram_id=group.trainer_telegram_id,
+            message=f'Платеж на сумму {payment.sum} добавлен пользователем {name}.\n'
+                    f'Группа: {group.title}',
+            user_telegram_id=payment.user_telegram_id,
+            payment_id=payment.id
+        )
+
+        return payment
 
     async def update(self, payment_id: int, payment_data: models.PaymentUpdate) -> tables.payment:
         query = (
@@ -59,10 +86,10 @@ class PaymentsService(BaseService):
             .returning(tables.payment)
         )
         updated_payment = await self._fetch_one_or_404(query)
-        users_service = UsersService()
-        user = await users_service.get_user_by_telegram_id(telegram_id=payment.user_telegram_id)
+
         await send_message_to_bot(
-            user_telegram_id=user.telegram_id,
+            subject='users_bot',
+            recipient_telegram_id=payment.user_telegram_id,
             message=f'Платеж на сумму {payment.sum} подтвержден! Спасибо!'
         )
         logger.info(f'Payment (id {payment_id}) confirmed')
@@ -72,14 +99,13 @@ class PaymentsService(BaseService):
         payment = await self.get(payment_id)
         await self.delete(payment_id)
 
-        users_service = UsersService()
-        user = await users_service.get_user_by_telegram_id(telegram_id=payment.user_telegram_id)
-
-        await send_message_to_bot(user_telegram_id=user.telegram_id,
-                                  message=f'Платеж на сумму {payment.sum} отклонен.\n'
-                                          f'Пожалуйста, проверьте всё и отметьте платёж снова\n'
-                                          f'/pay')
-        logger.info(f'Payment (id {payment_id}) rejecnted and deleted')
+        await send_message_to_bot(
+            subject='users_bot',
+            recipient_telegram_id=payment.user_telegram_id,
+            message=f'Платеж на сумму {payment.sum} отклонен.\n'
+                    f'Пожалуйста, проверьте всё и отметьте платёж снова\n'
+                    f'/pay')
+        logger.info(f'Payment (id {payment_id}) rejected and deleted')
 
     async def delete(self, payment_id: int):
         query = tables.payment.delete().where(tables.payment.c.id == payment_id)

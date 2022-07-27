@@ -35,7 +35,7 @@ class GroupsService(BaseService):
 
         return await self._fetch_one_or_404(query)
 
-    async def add_user_to_group(self, data: models.AddUserToGroup) -> tables.users_groups:
+    async def add_user_to_group_by_phone(self, data: models.AddUserToGroup) -> tables.users_groups:
         """
         Добавляет пользователя в группу, если пользователя с таким телефоном нет,
         то создает его и добавляет в группу заготовку пользователя
