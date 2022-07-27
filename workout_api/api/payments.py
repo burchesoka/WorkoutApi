@@ -60,6 +60,14 @@ async def confirm_payment(
     return await service.confirm(payment_id)
 
 
+@router.delete('/reject_payment/{payment_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def reject_payment(
+        payment_id: int,
+):
+    await service.reject(payment_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.delete('/{payment_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_payment(payment_id: int):
     await service.delete(payment_id)

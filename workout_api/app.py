@@ -7,8 +7,8 @@ from .database import database
 from .settings import logger_init
 
 
-logger_init('app')
-logger = logging.getLogger('app')
+logger = logging.getLogger(__name__)
+logger_init('workout_api')
 
 tags_metadata = [
     {

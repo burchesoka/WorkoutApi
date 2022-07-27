@@ -18,7 +18,7 @@ class BaseService:
 
     async def _fetch_one_or_404(self, query) -> object:
         try:
-            logger.debug('fetch_one_or_404')
+            logger.debug(f'fetch_one_or_404')
             entry = await database.fetch_one(query)
         except asyncpg.exceptions.UniqueViolationError as e:
             logger.info(e)
@@ -28,6 +28,6 @@ class BaseService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'{e}')
 
         if not entry:
-            logger.warning('entry not found')
+            logger.warning('entry not found' + str(query))
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         return entry

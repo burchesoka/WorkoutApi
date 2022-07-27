@@ -118,7 +118,8 @@ payment = Table(
     Column('sum', Integer),
     Column('workouts_left', Integer),
     Column('datetime', DateTime, default=datetime.utcnow()),
-    Column('user_id', ForeignKey('users.id'), index=True),
+    Column('user_telegram_id', ForeignKey('users.telegram_id'), index=True),
     Column('group_id', ForeignKey('groups.id'), index=True),
     Column('verified', Boolean, default=False),
+    Column('comment', String, nullable=True),
 )

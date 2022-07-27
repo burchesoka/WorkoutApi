@@ -9,6 +9,7 @@ from .base_service import BaseService
 from .nats import send_message_to_bot
 from .users import UsersService
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,7 +52,7 @@ class PaymentsService(BaseService):
                 sum=payment.sum,
                 workouts_left=payment.workouts_left,
                 datetime=payment.datetime,
-                user_id=payment.user_id,
+                user_telegram_id=payment.user_telegram_id,
                 group_id=payment.group_id,
                 verified=True
             )
@@ -59,10 +60,27 @@ class PaymentsService(BaseService):
         )
         updated_payment = await self._fetch_one_or_404(query)
         users_service = UsersService()
-        user = await users_service.get(user_id=payment.user_id)
-        await send_message_to_bot(user_telegram_id=user.telegram_id, message=f'Платеж на сумму {payment.sum}  подтвержден')
+        user = await users_service.get_user_by_telegram_id(telegram_id=payment.user_telegram_id)
+        await send_message_to_bot(
+            user_telegram_id=user.telegram_id,
+            message=f'Платеж на сумму {payment.sum} подтвержден! Спасибо!'
+        )
+        logger.info(f'Payment (id {payment_id}) confirmed')
         return updated_payment
 
-    async def delete(self, payment_id):
+    async def reject(self, payment_id: int):
+        payment = await self.get(payment_id)
+        await self.delete(payment_id)
+
+        users_service = UsersService()
+        user = await users_service.get_user_by_telegram_id(telegram_id=payment.user_telegram_id)
+
+        await send_message_to_bot(user_telegram_id=user.telegram_id,
+                                  message=f'Платеж на сумму {payment.sum} отклонен.\n'
+                                          f'Пожалуйста, проверьте всё и отметьте платёж снова\n'
+                                          f'/pay')
+        logger.info(f'Payment (id {payment_id}) rejecnted and deleted')
+
+    async def delete(self, payment_id: int):
         query = tables.payment.delete().where(tables.payment.c.id == payment_id)
         await database.execute(query)

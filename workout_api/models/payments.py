@@ -1,14 +1,16 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 
 class BasePayment(BaseModel):
     sum: int
     workouts_left: int
     datetime: datetime
-    user_id: int
+    user_telegram_id: int
     group_id: int
     verified: bool
+    comment: Optional[str]
 
 
 class PaymentCreate(BasePayment):

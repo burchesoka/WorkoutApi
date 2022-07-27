@@ -40,3 +40,4 @@ def logger_init(name):
     logger.addHandler(sh)
     logger.addHandler(fh)
     logger.debug('Logger was initialized')
+
