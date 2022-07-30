@@ -48,14 +48,18 @@ class PaymentsService(BaseService):
         group = await self._fetch_one_or_404(query)
 
         name = user_group.user_name_for_trainer
+        message = f'Платеж на сумму {payment["sum"]} добавлен пользователем {name}.\n' \
+                   f'Группа: {group["title"]}'
+
+        if payment.comment:
+            message += f'\nКомментарий: {payment["comment"]}'
 
         await send_message_to_bot(
             subject="trainers_bot",
-            recipient_telegram_id=group.trainer_telegram_id,
-            message=f'Платеж на сумму {payment.sum} добавлен пользователем {name}.\n'
-                    f'Группа: {group.title}',
-            user_telegram_id=payment.user_telegram_id,
-            payment_id=payment.id
+            recipient_telegram_id=group['trainer_telegram_id'],
+            message=message,
+            user_telegram_id=payment['user_telegram_id'],
+            payment_id=payment['id']
         )
 
         return payment
@@ -70,22 +74,19 @@ class PaymentsService(BaseService):
         return await self._fetch_one_or_404(query)
 
     async def confirm(self, payment_id: int) -> tables.payment:
+        """
+        Confirm payment: make verified = True in DB
+        Send message to user, that his payment is OK
+        """
         payment = await self.get(payment_id)
 
-        query = (
-            tables.payment.update()
-            .where(tables.payment.c.id == payment_id)
-            .values(
-                sum=payment.sum,
-                workouts_left=payment.workouts_left,
-                datetime=payment.datetime,
-                user_telegram_id=payment.user_telegram_id,
-                group_id=payment.group_id,
-                verified=True
-            )
-            .returning(tables.payment)
-        )
-        updated_payment = await self._fetch_one_or_404(query)
+        payment_dict = {}
+        for k in payment:
+            payment_dict[k] = payment[k]
+        payment_dict['verified'] = True
+
+        payment_data = models.PaymentUpdate(**payment_dict)
+        updated_payment = await self.update(payment_id, payment_data)
 
         await send_message_to_bot(
             subject='users_bot',
@@ -105,7 +106,8 @@ class PaymentsService(BaseService):
             message=f'Платеж на сумму {payment.sum} отклонен.\n'
                     f'Пожалуйста, проверьте всё и отметьте платёж снова\n'
                     f'/pay')
-        logger.info(f'Payment (id {payment_id}) rejected and deleted')
+        logger.info(f'Payment {payment.sum} (id {payment_id}) from user: '
+                    f'{payment.user_telegram_id} rejected and deleted')
 
     async def delete(self, payment_id: int):
         query = tables.payment.delete().where(tables.payment.c.id == payment_id)

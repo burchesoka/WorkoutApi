@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from fastapi import (
@@ -16,7 +17,7 @@ router = APIRouter(
 )
 
 service = TrainersService()
-
+logger = logging.getLogger(__name__)
 
 @router.get(
     '/',
@@ -34,6 +35,12 @@ async def get_trainer(trainer_id: int,):
 @router.get('/telegram/{telegram_id}', response_model=models.Trainer)
 async def get_trainer_by_telegram_id(telegram_id: int):
     return await service.get_trainer_by_telegram_id(telegram_id)
+
+
+@router.get('/phone/{phone}', response_model=models.Trainer)
+async def get_trainer_by_phone(phone: int):
+    logger.info('get_trainer_by_phone' + str(phone))
+    return await service.get_trainer_by_phone(phone)
 
 
 @router.post(

@@ -69,6 +69,7 @@ group = Table(
     Column('id', BigInteger, primary_key=True),
     Column('title', String(50)),
     Column('trainer_telegram_id', ForeignKey('trainers.telegram_id'), index=True),
+    Column('timetable', String),
 )
 
 users_groups = Table(

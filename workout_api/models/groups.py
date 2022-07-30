@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class BaseGroup(BaseModel):
     title: str
     trainer_telegram_id: int
+    timetable: str
 
 
 class GroupCreate(BaseGroup):

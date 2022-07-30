@@ -24,6 +24,10 @@ class TrainersService(BaseService):
         query = tables.trainer.select().where(tables.trainer.c.telegram_id == telegram_id)
         return await self._fetch_one_or_404(query)
 
+    async def get_trainer_by_phone(self, phone: int) -> tables.trainer:
+        query = tables.trainer.select().where(tables.trainer.c.phone == phone)
+        return await self._fetch_one_or_404(query)
+
     async def create(self, trainer_data: models.TrainerCreate) -> tables.trainer:
         query = tables.trainer.insert().values(
             **trainer_data.dict()
