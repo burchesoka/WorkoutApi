@@ -9,6 +9,7 @@ from ..database import database
 from .. import models
 from .users import UsersService
 from .base_service import BaseService
+from .nats import send_message_to_bot
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,8 @@ class GroupsService(BaseService):
         """
         Добавляет пользователя в группу, если пользователя с таким телефоном нет,
         то создает его и добавляет в группу заготовку пользователя
+        Если пользователь есть, но не был в группах, то его статус меняется на юзер
+        Если пользователь уже зарегестирован в боте, то ему отправляется сообщение
         """
         data_dict = data.dict()
         user_phone = data_dict.pop('user_phone')
@@ -64,7 +67,25 @@ class GroupsService(BaseService):
             **data_dict
         ).returning(tables.users_groups)
 
-        return await self._fetch_one_or_404(query)
+        users_groups = await self._fetch_one_or_404(query)
+
+        if user.status == models.UserStatus.user_without_trainer:
+            user_data_dict = dict(**user)
+            user_data_dict.pop('id')
+            user_data_dict['status'] = models.UserStatus.user
+
+            user_data = models.UserUpdate(**user_data_dict)
+            await user_services.update(user_id=user.id, user_data=user_data)
+
+        if user.status != models.UserStatus.just_added_by_trainer:
+            group = await self.get(data.group_id)
+            await send_message_to_bot(
+                subject='users_bot',
+                recipient_telegram_id=user.telegram_id,
+                message=f'Вы добавлены в группу {group.title}'
+            )
+
+        return users_groups
 
     async def update(self, group_id: int, group_data: models.GroupUpdate) -> tables.group:
         query = (
