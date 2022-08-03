@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class GroupsService(BaseService):
+    def __init__(self):
+        super().__init__()
+        self.user_services = UsersService()
+
     async def get_many(self, query=None) -> List[models.Group]:
         if query is None:
             query = tables.group.select()
@@ -28,6 +32,17 @@ class GroupsService(BaseService):
     async def get_groups_by_trainer_telegram_id(self, trainer_telegram_id: int) -> List[models.Group]:
         query = tables.group.select().where(tables.group.c.trainer_telegram_id == trainer_telegram_id)
         return await self.get_many(query=query)
+
+    async def get_groups_by_user_telegram_id(self, user_telegram_id: int) -> List[models.Group]:
+        user = await self.user_services.get_user_by_telegram_id(user_telegram_id)
+        query = tables.users_groups.select().where(
+            tables.users_groups.c.user_id == user.id
+        )
+        users_groups = await self.get_many(query=query)
+        groups = []
+        for i in users_groups:
+            groups.append(await self.get(i.group_id))
+        return groups
 
     async def create(self, group_data: models.GroupCreate) -> tables.group:
         query = tables.group.insert().values(
@@ -45,10 +60,9 @@ class GroupsService(BaseService):
         """
         data_dict = data.dict()
         user_phone = data_dict.pop('user_phone')
-        user_services = UsersService()
 
         try:
-            user = await user_services.get_user_by_phone(user_phone)
+            user = await self.user_services.get_user_by_phone(user_phone)
         except HTTPException as e:
             logger.info('User not found - creating!' + str(e))
             user = None
@@ -59,7 +73,7 @@ class GroupsService(BaseService):
                 phone=data.user_phone,
                 status=models.UserStatus.just_added_by_trainer
             )
-            user = await user_services.create(user_data)
+            user = await self.user_services.create(user_data)
 
         data_dict['user_id'] = user.id
 
@@ -75,7 +89,7 @@ class GroupsService(BaseService):
             user_data_dict['status'] = models.UserStatus.user
 
             user_data = models.UserUpdate(**user_data_dict)
-            await user_services.update(user_id=user.id, user_data=user_data)
+            await self.user_services.update(user_id=user.id, user_data=user_data)
 
         if user.status != models.UserStatus.just_added_by_trainer:
             group = await self.get(data.group_id)

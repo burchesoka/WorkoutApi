@@ -26,8 +26,8 @@ async def get_groups():
     return await service.get_many()
 
 
-@router.get('/{group_id}', response_model=models.Group,)
-async def get_group(group_id: int,):
+@router.get('/{group_id}', response_model=models.Group, )
+async def get_group(group_id: int, ):
     return await service.get(group_id)
 
 
@@ -36,12 +36,17 @@ async def get_groups_by_trainer_telegram_id(trainer_telegram_id: int):
     return await service.get_groups_by_trainer_telegram_id(trainer_telegram_id)
 
 
+@router.get('/by_user/{user_telegram_id}', response_model=List[models.Group])
+async def get_groups_by_user_telegram_id(trainer_telegram_id: int):
+    return await service.get_groups_by_user_telegram_id(trainer_telegram_id)
+
+
 @router.post(
     '/',
     response_model=models.Group,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_group(group_data: models.GroupCreate,):
+async def create_group(group_data: models.GroupCreate, ):
     return await service.create(group_data)
 
 
@@ -50,7 +55,7 @@ async def create_group(group_data: models.GroupCreate,):
     response_model=models.UserGroup,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_user_to_group_by_phone(data: models.AddUserToGroup,):
+async def add_user_to_group_by_phone(data: models.AddUserToGroup, ):
     return await service.add_user_to_group_by_phone(data)
 
 

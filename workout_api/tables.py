@@ -70,6 +70,8 @@ group = Table(
     Column('title', String(50)),
     Column('trainer_telegram_id', ForeignKey('trainers.telegram_id'), index=True),
     Column('timetable', String),
+    # Column('city', String),
+    # Column('address', String),
 )
 
 users_groups = Table(
@@ -123,4 +125,13 @@ payment = Table(
     Column('group_id', ForeignKey('groups.id'), index=True),
     Column('verified', Boolean, default=False),
     Column('comment', String, nullable=True),
+)
+
+event = Table(
+    'events',
+    metadata,
+    Column('id', BigInteger, primary_key=True),
+    Column('user_telegram_id', ForeignKey('users.telegram_id'), index=True),
+    Column('group_id', ForeignKey('groups.id'), index=True),
+    Column('datetime', DateTime),
 )
