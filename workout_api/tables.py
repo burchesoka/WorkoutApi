@@ -13,6 +13,8 @@ from sqlalchemy import (
     Table,
     MetaData,
 )
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, backref
 
 
 convention = {
@@ -31,37 +33,44 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 
-user = Table(
-    'users',
-    metadata,
-    Column('id', BigInteger, primary_key=True),
-    Column('name', String(100)),
-    Column('phone', BigInteger, unique=True),
-    Column('status', String),
-    Column('telegram_id', BigInteger, unique=True, index=True, nullable=True),
-)
+Base = declarative_base(metadata=metadata)
 
-user_stats = Table(
-    'user_stats',
-    metadata,
-    Column('id', BigInteger, primary_key=True),
-    Column('visited_events', Integer, nullable=True),
-    Column('skipped_events', Integer, nullable=True),
-    Column('paid_total', Integer, nullable=True),
-    Column('user_id', ForeignKey('users.id'), index=True),
-)
 
-user_profile = Table(
-    'user_profiles',
-    metadata,
-    Column('id', BigInteger, primary_key=True),
-    Column('city', String(25), nullable=True),
-    Column('gender', String(10), nullable=True),
-    Column('birthday', Date, nullable=True),
-    Column('date_created', DateTime, default=datetime.utcnow()),  # server_default=func.now() instead default=...?
-    Column('date_updated', DateTime, default=datetime.utcnow()),
-    Column('user_id', ForeignKey('users.id'), index=True),
-)
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    phone = Column(BigInteger, unique=True)
+    status = Column(String)
+    telegram_id = Column(BigInteger, unique=True, index=True, nullable=True)
+
+
+class UserProfile(Base):
+    __tablename__ = 'user_profiles'
+
+    id = Column(BigInteger, primary_key=True)
+    city = Column(String(25), nullable=True)
+    gender = Column(String(10), nullable=True)
+    birthday = Column(Date, nullable=True)
+    date_created = Column(DateTime, default=datetime.utcnow())  # server_default=func.now() instead default=...?
+    date_updated = Column(DateTime, default=datetime.utcnow())
+    user_id = Column(ForeignKey('users.id'), index=True)
+
+    # user = relationship('User', backref=backref('profile', lazy='joined'))
+
+
+class UserStats(Base):
+    __tablename__ = 'user_stats'
+
+    id = Column(BigInteger, primary_key=True)
+    visited_events = Column(Integer, nullable=True)
+    skipped_events = Column(Integer, nullable=True)
+    paid_total = Column(Integer, nullable=True)
+    user_id = Column(ForeignKey('users.id'), index=True)
+
+    # user = relationship('User', backref=backref('stats', lazy='joined'))
+
 
 group = Table(
     'groups',

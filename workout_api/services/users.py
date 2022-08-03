@@ -1,9 +1,6 @@
 import logging
 
-from typing import List, Optional
-
 from .. import tables
-from ..database import database
 from .. import models
 from .base_service import BaseService
 
@@ -11,52 +8,30 @@ logger = logging.getLogger(__name__)
 
 
 class UsersService(BaseService):
-    async def get_many(self, user_status: Optional[models.UserStatus] = None) -> List[models.User]:
-        if user_status:
-            query = tables.user.select().where(tables.user.c.status == user_status)
-            return await database.fetch_all(query)
-        query = tables.user.select()
-        logger.debug('get_many')
-        return await database.fetch_all(query)
 
-    async def get(self, user_id: int) -> tables.user:
-        query = tables.user.select().where(tables.user.c.id == user_id)
-        return await self._fetch_one_or_404(query)
+    async def get(self, user_id: int) -> tables.User:
+        return await self.get_or_404(wanted=user_id, table=tables.User)
 
-    async def get_user_by_telegram_id(self, telegram_id: int) -> tables.user:
-        query = tables.user.select().where(tables.user.c.telegram_id == telegram_id)
-        logger.debug('get_user_by_telegram_id')
-        return await self._fetch_one_or_404(query)
+    async def create_user_profile_stats(self, user_data: models.UserCreate) -> tables.User:
+        user = await self.create(table=tables.User,
+                                 data=user_data.dict())
 
-    async def get_user_by_phone(self, phone: int) -> tables.user:
-        query = tables.user.select().where(tables.user.c.phone == phone)
-        return await self._fetch_one_or_404(query)
-
-    async def create(self, user_data: models.UserCreate) -> tables.user:
-        query = tables.user.insert().values(
-            **user_data.dict()
-        ).returning(tables.user)
-
-        user = await self._fetch_one_or_404(query)
-        user_profile_query = tables.user_profile.insert().values(user_id=user.id)
-        await self._fetch_one_or_404(user_profile_query)
-        user_stats_query = tables.user_stats.insert().values(user_id=user.id)
-        await self._fetch_one_or_404(user_stats_query)
+        await self.create(table=tables.UserProfile, data={'user_id': user.id})
+        await self.create(table=tables.UserStats, data={'user_id': user.id})
         return user
 
-    async def update(self, user_id: int, user_data: models.UserUpdate) -> tables.user:
-        query = (
-            tables.user.update()
-            .where(tables.user.c.id == user_id)
-            .values(**user_data.dict())
-            .returning(tables.user)
+    async def delete_user(self, user_id):
+        await self.delete(
+            table=tables.UserProfile,
+            entity_id=user_id,
+            column=tables.UserProfile.user_id
         )
-        return await self._fetch_one_or_404(query)
-
-    async def delete(self, user_id):
-        query = tables.user_profile.delete().where(tables.user_profile.c.user_id == user_id)
-        await database.execute(query)
-        query = tables.user_stats.delete().where(tables.user_stats.c.user_id == user_id)
-        await database.execute(query)
-        query = tables.user.delete().where(tables.user.c.id == user_id)
-        await database.execute(query)
+        await self.delete(
+            table=tables.UserStats,
+            entity_id=user_id,
+            column=tables.UserStats.user_id
+        )
+        await self.delete(
+            table=tables.User,
+            entity_id=user_id
+        )
